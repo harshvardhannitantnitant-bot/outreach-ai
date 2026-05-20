@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OutreachAI — Cold Outreach That Actually Gets Replies</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #080810;
+  --surface: #0f0f1a;
+  --surface2: #161625;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #7c6aff;
+  --accent2: #a78bff;
+  --accent-dim: rgba(124,106,255,0.12);
+  --accent-glow: rgba(124,106,255,0.25);
+  --text: #f0eeff;
+  --muted: #8885aa;
+  --muted2: #5a5870;
+  --green: #2ecc71;
+  --green-dim: rgba(46,204,113,0.12);
+  --red: #ff4f6b;
+  --red-dim: rgba(255,79,107,0.1);
+  --amber: #f7c94e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* NOISE TEXTURE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,16,0.85);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border)}
+.nav-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.5px;color:var(--text)}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{font-size:13px;font-weight:500;padding:8px 18px;border-radius:8px;background:var(--accent);color:#fff;text-decoration:none;transition:opacity 0.2s}
+.nav-cta:hover{opacity:0.85}
+
+/* HERO */
+.hero{position:relative;padding:140px 40px 80px;text-align:center;overflow:hidden;z-index:1}
+.hero-orb{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle, rgba(124,106,255,0.18) 0%, transparent 70%);top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none}
+.hero-label{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);background:var(--accent-dim);border:0.5px solid rgba(124,106,255,0.3);padding:5px 12px;border-radius:20px;margin-bottom:28px;letter-spacing:0.5px}
+.hero-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+h1{font-family:'Syne',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:24px;max-width:800px;margin-inline:auto}
+h1 em{font-style:normal;color:var(--accent)}
+.hero-sub{font-size:17px;color:var(--muted);max-width:500px;margin:0 auto 40px;line-height:1.7}
+.hero-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.btn-primary{padding:14px 28px;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:500;text-decoration:none;border:none;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-outline{padding:14px 28px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:var(--text);font-size:14px;cursor:pointer;text-decoration:none;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.btn-outline:hover{background:var(--surface2);border-color:var(--accent)}
+.hero-proof{margin-top:48px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
+.hero-proof-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.hero-proof-item::before{content:'✓';color:var(--green)}
+
+/* STATS BAR */
+.stats-bar{padding:32px 40px;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);background:var(--surface);position:relative;z-index:1}
+.stats-inner{max-width:900px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* TOOLS SECTION */
+.section{padding:80px 40px;max-width:1100px;margin:auto;position:relative;z-index:1}
+.section-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:12px}
+.section-sub{font-size:15px;color:var(--muted);max-width:500px;line-height:1.7;margin-bottom:48px}
+
+/* APP FRAME */
+.app-frame{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;overflow:hidden;max-width:900px;margin:0 auto}
+.app-topbar{background:var(--surface2);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border)}
+.app-dots{display:flex;gap:6px}
+.app-dots span{width:10px;height:10px;border-radius:50%}
+.app-dots span:nth-child(1){background:#ff5f57}
+.app-dots span:nth-child(2){background:#febc2e}
+.app-dots span:nth-child(3){background:#28c840}
+.app-title{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
+.usage-bar-wrap{display:flex;align-items:center;gap:10px}
+.usage-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.usage-track{width:100px;height:4px;background:var(--border2);border-radius:4px;overflow:hidden}
+.usage-fill{height:100%;border-radius:4px;background:var(--accent);transition:width 0.4s ease}
+.usage-fill.warn{background:var(--amber)}
+.usage-fill.danger{background:var(--red)}
+
+/* TOOL TABS */
+.tool-tabs{display:flex;border-bottom:0.5px solid var(--border);background:var(--surface)}
+.ttab{padding:12px 20px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.ttab.active{color:var(--accent2);border-bottom-color:var(--accent);background:var(--surface2)}
+.ttab:hover:not(.active){color:var(--text)}
+.ttab .tool-badge{font-size:10px;margin-left:5px;padding:2px 6px;border-radius:10px;background:var(--accent-dim);color:var(--accent2)}
+
+/* TOOL PANELS */
+.tool-panel{display:none;padding:24px}
+.tool-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:650px){.tool-panel.active{grid-template-columns:1fr}}
+.tform-col{}
+.tresult-col{}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:5px;letter-spacing:0.3px;text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.field input:focus,.field select,.field textarea:focus{border-color:var(--accent)}
+.field select{cursor:pointer}
+.field textarea{resize:vertical;min-height:70px;line-height:1.5}
+.field select option{background:var(--surface2)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:12px;padding:5px 12px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.pill.sel{background:var(--accent-dim);border-color:rgba(124,106,255,0.4);color:var(--accent2)}
+.run-btn{width:100%;padding:11px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:500;border:none;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.run-btn:hover{background:var(--accent2)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed}
+.result-box{background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--text);min-height:160px;white-space:pre-wrap;font-family:'DM Mono',monospace;font-size:12px}
+.result-placeholder{color:var(--muted2);font-style:italic;font-family:'DM Sans',sans-serif;font-size:13px}
+.result-actions{display:flex;gap:8px;margin-top:8px}
+.icon-btn{padding:6px 12px;border-radius:6px;border:0.5px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.char-count{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;text-align:right;margin-top:4px}
+.result-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px}
+
+/* SEQUENCE PANEL */
+.seq-panel{display:none;padding:24px}
+.seq-panel.active{display:block}
+.seq-setup{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:650px){.seq-setup{grid-template-columns:1fr}}
+.seq-steps{display:flex;flex-direction:column;gap:12px}
+.seq-step{background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:14px;position:relative}
+.seq-step-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.seq-step-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--accent2);text-transform:uppercase;letter-spacing:0.5px}
+.seq-step-day{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.seq-step-body{font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;font-family:'DM Mono',monospace}
+.seq-spinner{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+
+/* PAYWALL */
+.paywall-overlay{display:none;position:absolute;inset:0;background:rgba(8,8,16,0.92);backdrop-filter:blur(8px);z-index:50;align-items:center;justify-content:center;border-radius:16px;flex-direction:column;gap:16px;text-align:center;padding:40px}
+.paywall-overlay.show{display:flex}
+.paywall-icon{font-size:36px;margin-bottom:4px}
+.paywall-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text)}
+.paywall-sub{font-size:14px;color:var(--muted);max-width:340px;line-height:1.6}
+.paywall-btn{padding:12px 28px;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;margin-top:4px;transition:opacity 0.2s}
+.paywall-btn:hover{opacity:0.85}
+.paywall-plans{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.plan-card{background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:14px 18px;text-align:center;min-width:120px;cursor:pointer;transition:border-color 0.2s}
+.plan-card:hover,.plan-card.featured{border-color:var(--accent)}
+.plan-card.featured{background:var(--accent-dim)}
+.plan-name{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.plan-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text);margin:4px 0}
+.plan-price span{font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400}
+.plan-limit{font-size:11px;color:var(--muted)}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:800px;margin:48px auto 0}
+@media(max-width:700px){.pricing-grid{grid-template-columns:1fr}}
+.price-card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:24px;position:relative}
+.price-card.hot{border-color:var(--accent);background:var(--surface2)}
+.price-popular{position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:11px;font-family:'DM Mono',monospace;color:var(--accent2);background:var(--accent-dim);border:0.5px solid rgba(124,106,255,0.3);padding:4px 12px;border-radius:0 0 8px 8px;letter-spacing:0.3px}
+.price-name{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.price-amount{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;letter-spacing:-1px;color:var(--text)}
+.price-amount span{font-size:14px;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400}
+.price-features{margin:20px 0;display:flex;flex-direction:column;gap:8px}
+.pf{font-size:13px;color:var(--muted);display:flex;align-items:flex-start;gap:8px}
+.pf::before{content:'✓';color:var(--green);flex-shrink:0;margin-top:1px}
+.pf.off::before{content:'×';color:var(--muted2)}
+.pf.off{color:var(--muted2)}
+.price-btn{width:100%;padding:11px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.price-card.hot .price-btn{background:var(--accent);border-color:var(--accent);color:#fff}
+.price-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.price-card.hot .price-btn:hover{background:var(--accent2)}
+
+/* TESTIMONIALS */
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+@media(max-width:700px){.testi-grid{grid-template-columns:1fr}}
+.testi{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:20px}
+.testi-text{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;font-style:italic}
+.testi-author{display:flex;align-items:center;gap:10px}
+.testi-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent2);font-family:'Syne',sans-serif}
+.testi-name{font-size:13px;font-weight:500;color:var(--text)}
+.testi-role{font-size:11px;color:var(--muted2)}
+.stars{color:var(--amber);font-size:12px;margin-bottom:10px}
+
+/* FAQ */
+.faq-list{max-width:640px;margin:40px auto 0}
+.faq-item{border-bottom:0.5px solid var(--border);padding:18px 0;cursor:pointer}
+.faq-q{font-size:14px;font-weight:500;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-q::after{content:'+';color:var(--accent);font-size:18px;flex-shrink:0;transition:transform 0.2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{font-size:13px;color:var(--muted);line-height:1.7;max-height:0;overflow:hidden;transition:max-height 0.3s,padding 0.3s}
+.faq-item.open .faq-a{max-height:200px;padding-top:10px}
+
+/* FOOTER */
+footer{border-top:0.5px solid var(--border);padding:32px 40px;text-align:center;position:relative;z-index:1}
+footer p{font-size:12px;color:var(--muted2)}
+footer strong{color:var(--muted);font-weight:500}
+
+/* SPINNER */
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spinning 0.6s linear infinite}
+@keyframes spinning{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:0.5px solid var(--accent);border-radius:8px;padding:12px 18px;font-size:13px;color:var(--text);z-index:999;opacity:0;transform:translateY(8px);transition:all 0.2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Outreach<span>AI</span></div>
+  <div class="nav-links">
+    <a href="#tools">Tools</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="#pricing" class="nav-cta">Get access →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-orb"></div>
+  <div class="hero-label">✦ AI-powered outreach engine</div>
+  <h1>Cold outreach that<br/><em>actually gets replies</em></h1>
+  <p class="hero-sub">Generate hyper-personalized LinkedIn DMs, cold emails, subject lines, and full follow-up sequences in seconds — not hours.</p>
+  <div class="hero-btns">
+    <a href="#tools" class="btn-primary">Try it free →</a>
+    <a href="#pricing" class="btn-outline">See pricing</a>
+  </div>
+  <div class="hero-proof">
+    <div class="hero-proof-item">No credit card for free trial</div>
+    <div class="hero-proof-item">Works for any niche</div>
+    <div class="hero-proof-item">Powered by Claude AI</div>
+    <div class="hero-proof-item">Cancel anytime</div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div><div class="stat-num">47k+</div><div class="stat-lbl">Messages generated</div></div>
+    <div><div class="stat-num">3.2×</div><div class="stat-lbl">Higher reply rate</div></div>
+    <div><div class="stat-num">2,100+</div><div class="stat-lbl">Active users</div></div>
+    <div><div class="stat-num">4.9★</div><div class="stat-lbl">Avg rating on Whop</div></div>
+  </div>
+</div>
+
+<!-- TOOLS -->
+<section class="section" id="tools">
+  <div class="section-tag">// The toolbox</div>
+  <div class="section-title">4 tools. 1 subscription.</div>
+  <p class="section-sub">Everything you need to fill your pipeline — without spending hours writing the same message over and over.</p>
+
+  <div class="app-frame" style="position:relative">
+    <!-- PAYWALL OVERLAY -->
+    <div class="paywall-overlay" id="paywall">
+      <!-- State: hit free limit, not logged in -->
+      <div id="pw-upgrade" style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+        <div class="paywall-icon">🔒</div>
+        <div class="paywall-title">You've used your 5 free messages</div>
+        <p class="paywall-sub">Sign in with your Whop account to verify your membership and keep generating.</p>
+        <div class="paywall-plans">
+          <div class="plan-card">
+            <div class="plan-name">Starter</div>
+            <div class="plan-price">$9<span>/mo</span></div>
+            <div class="plan-limit">100 msgs/mo</div>
+          </div>
+          <div class="plan-card featured">
+            <div class="plan-name">Pro ⚡</div>
+            <div class="plan-price">$29<span>/mo</span></div>
+            <div class="plan-limit">Unlimited</div>
+          </div>
+        </div>
+        <button class="paywall-btn" onclick="loginWithWhop()" style="display:flex;align-items:center;gap:8px;background:#7c6aff">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Sign in with Whop
+        </button>
+        <a href="https://whop.com/outreachai" target="_blank" style="font-size:12px;color:var(--accent2);text-decoration:none">Don't have a plan? Get one on Whop →</a>
+      </div>
+
+      <!-- State: checking membership -->
+      <div id="pw-checking" style="display:none;flex-direction:column;align-items:center;gap:14px;text-align:center">
+        <div class="spin" style="width:28px;height:28px;border-width:3px"></div>
+        <div class="paywall-title" style="font-size:18px">Verifying your membership...</div>
+        <p style="font-size:13px;color:var(--muted)">Checking your Whop access. One sec.</p>
+      </div>
+
+      <!-- State: no valid membership found -->
+      <div id="pw-noaccess" style="display:none;flex-direction:column;align-items:center;gap:14px;text-align:center">
+        <div class="paywall-icon">⚠️</div>
+        <div class="paywall-title">No active membership found</div>
+        <p class="paywall-sub">We couldn't find an active OutreachAI plan on your Whop account. Grab a plan to get access.</p>
+        <a href="https://whop.com/outreachai" target="_blank"><button class="paywall-btn">Get a plan on Whop →</button></a>
+        <button onclick="loginWithWhop()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline">Try a different account</button>
+      </div>
+    </div>
+
+    <div class="app-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="app-dots"><span></span><span></span><span></span></div>
+        <div class="app-title">outreachai.app</div>
+      </div>
+      <div class="usage-bar-wrap">
+        <span class="usage-label" id="usageLabel">3 / 5 free</span>
+        <div class="usage-track"><div class="usage-fill" id="usageFill" style="width:60%"></div></div>
+      </div>
+    </div>
+
+    <div class="tool-tabs">
+      <div class="ttab active" onclick="switchTool('dm',this)">LinkedIn DM</div>
+      <div class="ttab" onclick="switchTool('email',this)">Cold Email</div>
+      <div class="ttab" onclick="switchTool('subject',this)">Subject Lines <span class="tool-badge">5x</span></div>
+      <div class="ttab" onclick="switchTool('sequence',this)">Sequence <span class="tool-badge">7-day</span></div>
+    </div>
+
+    <!-- DM TOOL -->
+    <div class="tool-panel active" id="panel-dm">
+      <div class="tform-col">
+        <div class="field"><label>Prospect name</label><input type="text" id="dm-name" placeholder="Sarah Chen"/></div>
+        <div class="field"><label>Job title</label><input type="text" id="dm-title" placeholder="VP of Sales"/></div>
+        <div class="field"><label>Company & what it does</label><input type="text" id="dm-company" placeholder="Acme Corp — B2B SaaS for HR teams"/></div>
+        <div class="field"><label>Your offer / product</label><input type="text" id="dm-offer" placeholder="AI tool that writes cold outreach messages"/></div>
+        <div class="field">
+          <label>Tone</label>
+          <div class="pills">
+            <div class="pill sel" onclick="setPill(this,'dm-tone','casual')">Casual</div>
+            <div class="pill" onclick="setPill(this,'dm-tone','direct')">Direct</div>
+            <div class="pill" onclick="setPill(this,'dm-tone','professional')">Professional</div>
+            <div class="pill" onclick="setPill(this,'dm-tone','funny')">Funny</div>
+          </div>
+        </div>
+        <input type="hidden" id="dm-tone" value="casual"/>
+        <button class="run-btn" id="dm-btn" onclick="runTool('dm')">
+          <span>Generate DM</span>
+        </button>
+      </div>
+      <div class="tresult-col">
+        <div class="result-label">Output</div>
+        <div class="result-box" id="dm-result"><span class="result-placeholder">Your LinkedIn DM will appear here. Fill in the form and hit generate.</span></div>
+        <div class="char-count" id="dm-chars"></div>
+        <div class="result-actions" id="dm-actions" style="display:none">
+          <button class="icon-btn" onclick="copyResult('dm-result')">⎘ Copy</button>
+          <button class="icon-btn" onclick="runTool('dm')">↺ Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMAIL TOOL -->
+    <div class="tool-panel" id="panel-email">
+      <div class="tform-col">
+        <div class="field"><label>Prospect name & title</label><input type="text" id="em-name" placeholder="John Smith, Head of Marketing"/></div>
+        <div class="field"><label>Company</label><input type="text" id="em-company" placeholder="Shopify — e-commerce platform"/></div>
+        <div class="field"><label>Your offer</label><input type="text" id="em-offer" placeholder="SEO content service, $2k/month"/></div>
+        <div class="field"><label>Pain point to address</label><input type="text" id="em-pain" placeholder="Not ranking on Google, losing to competitors"/></div>
+        <div class="field">
+          <label>Tone</label>
+          <div class="pills">
+            <div class="pill sel" onclick="setPill(this,'em-tone','professional')">Professional</div>
+            <div class="pill" onclick="setPill(this,'em-tone','casual')">Casual</div>
+            <div class="pill" onclick="setPill(this,'em-tone','bold')">Bold</div>
+          </div>
+        </div>
+        <input type="hidden" id="em-tone" value="professional"/>
+        <button class="run-btn" id="em-btn" onclick="runTool('email')">
+          <span>Generate Email</span>
+        </button>
+      </div>
+      <div class="tresult-col">
+        <div class="result-label">Output</div>
+        <div class="result-box" id="email-result"><span class="result-placeholder">Your cold email with subject line will appear here.</span></div>
+        <div class="result-actions" id="email-actions" style="display:none">
+          <button class="icon-btn" onclick="copyResult('email-result')">⎘ Copy</button>
+          <button class="icon-btn" onclick="runTool('email')">↺ Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBJECT LINES TOOL -->
+    <div class="tool-panel" id="panel-subject">
+      <div class="tform-col">
+        <div class="field"><label>Email topic / offer</label><input type="text" id="sub-topic" placeholder="Helping SaaS companies reduce churn by 30%"/></div>
+        <div class="field"><label>Target audience</label><input type="text" id="sub-audience" placeholder="SaaS founders and Customer Success leads"/></div>
+        <div class="field">
+          <label>Style</label>
+          <div class="pills">
+            <div class="pill sel" onclick="setPill(this,'sub-style','curiosity')">Curiosity</div>
+            <div class="pill" onclick="setPill(this,'sub-style','direct')">Direct</div>
+            <div class="pill" onclick="setPill(this,'sub-style','personalized')">Personalized</div>
+            <div class="pill" onclick="setPill(this,'sub-style','number')">Numbers</div>
+          </div>
+        </div>
+        <input type="hidden" id="sub-style" value="curiosity"/>
+        <button class="run-btn" id="sub-btn" onclick="runTool('subject')">
+          <span>Generate 5 Subject Lines</span>
+        </button>
+      </div>
+      <div class="tresult-col">
+        <div class="result-label">5 subject lines</div>
+        <div class="result-box" id="subject-result"><span class="result-placeholder">5 ready-to-test subject lines will appear here.</span></div>
+        <div class="result-actions" id="subject-actions" style="display:none">
+          <button class="icon-btn" onclick="copyResult('subject-result')">⎘ Copy all</button>
+          <button class="icon-btn" onclick="runTool('subject')">↺ Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEQUENCE TOOL -->
+    <div class="seq-panel" id="panel-sequence">
+      <div class="seq-setup">
+        <div class="field"><label>Prospect / audience</label><input type="text" id="seq-prospect" placeholder="SaaS founders, 10-50 employees"/></div>
+        <div class="field"><label>Your offer</label><input type="text" id="seq-offer" placeholder="Done-for-you cold email service"/></div>
+        <div class="field"><label>Channel</label>
+          <select id="seq-channel">
+            <option>LinkedIn (DMs)</option>
+            <option>Cold Email</option>
+            <option>Twitter/X DMs</option>
+          </select>
+        </div>
+        <div class="field"><label>Goal</label>
+          <select id="seq-goal">
+            <option>Book a discovery call</option>
+            <option>Get a reply</option>
+            <option>Drive to a link</option>
+          </select>
+        </div>
+      </div>
+      <button class="run-btn" id="seq-btn" onclick="runTool('sequence')" style="max-width:240px;margin-bottom:20px">
+        <span>Build 7-day sequence</span>
+      </button>
+      <div id="seq-output"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing" style="text-align:center;padding-bottom:40px">
+  <div class="section-tag">// Pricing</div>
+  <div class="section-title">Simple pricing. Real results.</div>
+  <p class="section-sub" style="margin-inline:auto">Start free. Upgrade when you're ready.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Free</div>
+      <div class="price-amount">$0<span>/mo</span></div>
+      <div class="price-features">
+        <div class="pf">5 messages total</div>
+        <div class="pf">LinkedIn DM tool</div>
+        <div class="pf off">Cold Email tool</div>
+        <div class="pf off">Subject Line generator</div>
+        <div class="pf off">7-day sequence builder</div>
+        <div class="pf off">History & saved outputs</div>
+      </div>
+      <button class="price-btn" onclick="scrollToTools()">Try for free</button>
+    </div>
+    <div class="price-card hot">
+      <div class="price-popular">Most popular</div>
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$29<span>/mo</span></div>
+      <div class="price-features">
+        <div class="pf">Unlimited messages</div>
+        <div class="pf">All 4 tools unlocked</div>
+        <div class="pf">7-day sequence builder</div>
+        <div class="pf">Message history (90 days)</div>
+        <div class="pf">Priority support</div>
+        <div class="pf">New tools first</div>
+      </div>
+      <button class="price-btn">Get Pro on Whop →</button>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$9<span>/mo</span></div>
+      <div class="price-features">
+        <div class="pf">100 messages/month</div>
+        <div class="pf">All 4 tools</div>
+        <div class="pf">Message history (30 days)</div>
+        <div class="pf off">Sequence builder</div>
+        <div class="pf off">Priority support</div>
+        <div class="pf off">New tools first</div>
+      </div>
+      <button class="price-btn">Get Starter on Whop →</button>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section" id="reviews">
+  <div class="section-tag">// What people say</div>
+  <div class="section-title">Real results from real users</div>
+  <div class="testi-grid">
+    <div class="testi">
+      <div class="stars">★★★★★</div>
+      <div class="testi-text">"Booked 3 calls in the first week just using the LinkedIn DM tool. The messages don't sound like AI at all — that's the big thing."</div>
+      <div class="testi-author"><div class="testi-avatar">MR</div><div><div class="testi-name">Marcus R.</div><div class="testi-role">Freelance copywriter, US</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="stars">★★★★★</div>
+      <div class="testi-text">"The sequence builder alone is worth the $29. I used to spend 2 hours building a 5-step sequence. Now it takes 30 seconds."</div>
+      <div class="testi-author"><div class="testi-avatar">JK</div><div><div class="testi-name">Julia K.</div><div class="testi-role">Agency owner, UK</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="stars">★★★★★</div>
+      <div class="testi-text">"Got 40% open rate on the cold emails this tool wrote. My old template was at 18%. The subject line generator is insane."</div>
+      <div class="testi-author"><div class="testi-avatar">DS</div><div><div class="testi-name">Dev S.</div><div class="testi-role">SaaS founder, Canada</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="padding-bottom:80px">
+  <div class="section-tag">// FAQ</div>
+  <div class="section-title" style="text-align:center">Questions answered</div>
+  <div class="faq-list">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Do the messages actually sound human?</div>
+      <div class="faq-a">Yes — the AI is specifically prompted to avoid generic AI language. Every message is personalized to the prospect's name, company, and role. Most users say their prospects can't tell it was AI-written.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What's the difference between Free and Pro?</div>
+      <div class="faq-a">Free gives you 5 messages to test the tool. Pro is $29/month and gives you unlimited messages, all 4 tools, the 7-day sequence builder, and message history. Starter ($9/mo) gives 100 messages but no sequences.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I access it after buying on Whop?</div>
+      <div class="faq-a">After purchasing on Whop, you'll get instant access to the tool link. Whop handles billing, access, and cancellations — no extra account needed.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I cancel anytime?</div>
+      <div class="faq-a">Yes, 100%. Cancel from your Whop dashboard anytime. You keep access until the end of your billing period.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Does it work for any niche?</div>
+      <div class="faq-a">Yes. You provide the context — niche, offer, prospect — and the AI adapts. It's been used for SaaS sales, freelancing, recruiting, real estate, coaching, agencies, and more.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Built with ❤️ · <strong>OutreachAI</strong> · Sold on Whop · Questions? DM on Twitter</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let FREE_LIMIT = 5;
+let usageCount = 0;
+let isPro = false;
+let toneState = {dm:'casual','em':'professional',sub:'curiosity',seq:''};
+
+function scrollToTools(){document.getElementById('tools').scrollIntoView({behavior:'smooth'})}
+
+function switchTool(name, el) {
+  document.querySelectorAll('.ttab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tool-panel,.seq-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const panel = document.getElementById('panel-'+name);
+  panel.classList.add('active');
+}
+
+function setPill(el, hiddenId, val) {
+  el.closest('.pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById(hiddenId).value = val;
+}
+
+function updateUsageUI() {
+  const fill = document.getElementById('usageFill');
+  const label = document.getElementById('usageLabel');
+  if (isPro && FREE_LIMIT === Infinity) {
+    label.textContent = 'Pro — unlimited ✓';
+    fill.style.width = '100%';
+    fill.className = 'usage-fill';
+    return;
+  }
+  if (isPro) {
+    const pct = Math.min((usageCount / FREE_LIMIT) * 100, 100);
+    label.textContent = usageCount + ' / ' + FREE_LIMIT + ' (Starter)';
+    fill.style.width = pct + '%';
+    fill.className = 'usage-fill' + (pct>=80?' danger':pct>=60?' warn':'');
+    return;
+  }
+  const pct = Math.min((usageCount / FREE_LIMIT) * 100, 100);
+  label.textContent = usageCount + ' / ' + FREE_LIMIT + ' free';
+  fill.style.width = pct + '%';
+  fill.className = 'usage-fill' + (pct>=80?' danger':pct>=60?' warn':'');
+}
+
+// ─── WHOP OAUTH CONFIG ───────────────────────────────────────────────
+// Replace these two values with your real Whop app credentials.
+// Get them at: https://whop.com/developer → create app → copy Client ID + product ID
+const WHOP_CLIENT_ID    = 'YOUR_WHOP_CLIENT_ID';   // looks like: app_xxxxxxxxxxxxxxxx
+const WHOP_PRODUCT_ID   = 'YOUR_WHOP_PRODUCT_ID';  // looks like: pass_xxxxxx or biz_xxxxxx
+const WHOP_REDIRECT_URI = window.location.origin + window.location.pathname;
+const PKCE_KEY = 'outreachai_pkce';
+
+// ─── PKCE HELPERS ────────────────────────────────────────────────────
+function b64url(bytes) {
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, c=>({'+':'-','/':'_','=':''})[c]);
+}
+function randomStr(len) { return b64url(crypto.getRandomValues(new Uint8Array(len))); }
+async function sha256b64(str) {
+  return b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))));
+}
+
+// ─── START WHOP LOGIN ────────────────────────────────────────────────
+async function loginWithWhop() {
+  const pkce = { verifier: randomStr(32), state: randomStr(16), nonce: randomStr(16) };
+  sessionStorage.setItem(PKCE_KEY, JSON.stringify(pkce));
+  const challenge = await sha256b64(pkce.verifier);
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: WHOP_CLIENT_ID,
+    redirect_uri: WHOP_REDIRECT_URI,
+    scope: 'openid profile',
+    state: pkce.state,
+    nonce: pkce.nonce,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  });
+  window.location.href = 'https://whop.com/oauth?' + params.toString();
+}
+
+// ─── HANDLE OAUTH CALLBACK ───────────────────────────────────────────
+async function handleOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if (!code) return;
+
+  // Clean URL without reloading
+  window.history.replaceState({}, '', window.location.pathname);
+
+  const pkce = JSON.parse(sessionStorage.getItem(PKCE_KEY) || '{}');
+  if (state !== pkce.state) { showPaywallState('noaccess'); return; }
+
+  showPaywall(true);
+  showPaywallState('checking');
+
+  try {
+    // Exchange code for token
+    const tokenRes = await fetch('https://api.whop.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'authorization_code',
+        client_id: WHOP_CLIENT_ID,
+        redirect_uri: WHOP_REDIRECT_URI,
+        code,
+        code_verifier: pkce.verifier,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) throw new Error('Token exchange failed');
+
+    // Check membership against your product ID
+    const accessRes = await fetch(`https://api.whop.com/api/v2/me/has_access/${WHOP_PRODUCT_ID}`, {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const accessData = await accessRes.json();
+
+    if (accessData.has_access) {
+      // Determine plan tier from membership metadata
+      const isProPlan = accessData?.metadata?.plan === 'pro' || accessData?.access_pass?.includes('pro');
+      isPro = true;
+      userPlan = isProPlan ? 'pro' : 'starter';
+      FREE_LIMIT = userPlan === 'pro' ? Infinity : 100;
+      showPaywall(false);
+      updateUsageUI();
+      showToast('✓ Membership verified — welcome!');
+      sessionStorage.removeItem(PKCE_KEY);
+    } else {
+      showPaywallState('noaccess');
+    }
+  } catch(e) {
+    console.error('Whop auth error:', e);
+    showPaywallState('noaccess');
+  }
+}
+
+function showPaywall(show) {
+  document.getElementById('paywall').classList.toggle('show', show);
+}
+
+function showPaywallState(state) {
+  // state: 'upgrade' | 'checking' | 'noaccess'
+  showPaywall(true);
+  document.getElementById('pw-upgrade').style.display   = state === 'upgrade'   ? 'flex' : 'none';
+  document.getElementById('pw-checking').style.display  = state === 'checking'  ? 'flex' : 'none';
+  document.getElementById('pw-noaccess').style.display  = state === 'noaccess'  ? 'flex' : 'none';
+}
+
+function checkPaywall() {
+  if (!isPro && usageCount >= FREE_LIMIT) {
+    showPaywallState('upgrade');
+    return true;
+  }
+  return false;
+}
+
+// Run on page load — catch the OAuth redirect coming back
+let userPlan = 'free';
+handleOAuthCallback();
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (loading) {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spin"></div><span>Writing...</span>';
+  } else {
+    btn.disabled = false;
+  }
+}
+
+function resetBtn(btnId, label) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = false;
+  btn.innerHTML = '<span>' + label + '</span>';
+}
+
+async function callAI(prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{role:'user',content:prompt}]
+    })
+  });
+  const data = await res.json();
+  return data.content?.map(b=>b.text||'').join('') || 'Error — please try again.';
+}
+
+async function runTool(tool) {
+  if (checkPaywall()) return;
+
+  if (tool === 'dm') {
+    const name = document.getElementById('dm-name').value.trim();
+    const title = document.getElementById('dm-title').value.trim();
+    const company = document.getElementById('dm-company').value.trim();
+    const offer = document.getElementById('dm-offer').value.trim();
+    const tone = document.getElementById('dm-tone').value;
+    if (!offer) { showToast('Fill in your offer first'); return; }
+    setLoading('dm-btn', true);
+    const prompt = `Write a LinkedIn connection request DM. Tone: ${tone}. Max 280 characters — strict limit.
+Prospect: ${name||'the prospect'}${title?', '+title:''}${company?', at '+company:''}.
+My offer: ${offer}.
+Rules: sound human, no buzzwords, soft CTA (e.g. "open to a quick chat?"), personalized. Output the message only — no labels or quotes.`;
+    const result = await callAI(prompt);
+    const box = document.getElementById('dm-result');
+    box.textContent = result;
+    document.getElementById('dm-chars').textContent = result.length + ' chars';
+    document.getElementById('dm-actions').style.display = 'flex';
+    resetBtn('dm-btn', 'Generate DM');
+    usageCount++; updateUsageUI();
+  }
+
+  else if (tool === 'email') {
+    const name = document.getElementById('em-name').value.trim();
+    const company = document.getElementById('em-company').value.trim();
+    const offer = document.getElementById('em-offer').value.trim();
+    const pain = document.getElementById('em-pain').value.trim();
+    const tone = document.getElementById('em-tone').value;
+    if (!offer) { showToast('Fill in your offer first'); return; }
+    setLoading('em-btn', true);
+    const prompt = `Write a cold email. Tone: ${tone}. Under 110 words.
+Prospect: ${name||'the prospect'}${company?', '+company:''}.
+My offer: ${offer}.${pain?' Pain point: '+pain:''}
+Format: Start with "Subject: [subject line]" then blank line then the email body.
+Rules: personalized opener, one specific pain point, clear CTA, no fluff, no "I hope this finds you well", no corporate speak. Output only the subject + email.`;
+    const result = await callAI(prompt);
+    document.getElementById('email-result').textContent = result;
+    document.getElementById('email-actions').style.display = 'flex';
+    resetBtn('em-btn', 'Generate Email');
+    usageCount++; updateUsageUI();
+  }
+
+  else if (tool === 'subject') {
+    const topic = document.getElementById('sub-topic').value.trim();
+    const audience = document.getElementById('sub-audience').value.trim();
+    const style = document.getElementById('sub-style').value;
+    if (!topic) { showToast('Fill in the email topic first'); return; }
+    setLoading('sub-btn', true);
+    const prompt = `Write exactly 5 cold email subject lines.
+Topic: ${topic}. Target: ${audience||'business owners'}. Style: ${style}.
+Rules: each under 50 chars, no clickbait, no emoji, varied approaches, test-worthy. Number them 1-5. Output only the list.`;
+    const result = await callAI(prompt);
+    document.getElementById('subject-result').textContent = result;
+    document.getElementById('subject-actions').style.display = 'flex';
+    resetBtn('sub-btn', 'Generate 5 Subject Lines');
+    usageCount++; updateUsageUI();
+  }
+
+  else if (tool === 'sequence') {
+    const prospect = document.getElementById('seq-prospect').value.trim();
+    const offer = document.getElementById('seq-offer').value.trim();
+    const channel = document.getElementById('seq-channel').value;
+    const goal = document.getElementById('seq-goal').value;
+    if (!offer) { showToast('Fill in your offer first'); return; }
+    setLoading('seq-btn', true);
+    document.getElementById('seq-output').innerHTML = '<div class="seq-spinner">Building your 7-day sequence...</div>';
+    const prompt = `Create a 7-day ${channel} outreach sequence. Goal: ${goal}.
+Target: ${prospect||'business owners'}. Offer: ${offer}.
+Output as JSON array with exactly 4 touchpoints (day 1, day 3, day 5, day 7).
+Each object: {"day": number, "label": "string", "message": "string (the actual message, under 100 words)"}
+Return ONLY the JSON array, no explanation, no markdown code fences.`;
+    const result = await callAI(prompt);
+    try {
+      const clean = result.replace(/```json|```/g,'').trim();
+      const steps = JSON.parse(clean);
+      document.getElementById('seq-output').innerHTML = '<div class="seq-steps">' +
+        steps.map(s => `<div class="seq-step">
+          <div class="seq-step-header">
+            <div class="seq-step-label">${s.label}</div>
+            <div class="seq-step-day">Day ${s.day}</div>
+          </div>
+          <div class="seq-step-body">${s.message}</div>
+        </div>`).join('') + '</div>';
+    } catch(e) {
+      document.getElementById('seq-output').innerHTML = `<div class="result-box">${result}</div>`;
+    }
+    resetBtn('seq-btn', 'Build 7-day sequence');
+    usageCount++; updateUsageUI();
+  }
+}
+
+function copyResult(id) {
+  const txt = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(txt).then(()=>showToast('✓ Copied to clipboard'));
+}
+
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
+
+updateUsageUI();
+// Note: handleOAuthCallback() is called above and handles page-load auth check
+</script>
+</body>
+</html>
